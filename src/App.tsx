@@ -18,15 +18,20 @@ export default function App() {
         const mapData = await getMapData(MAPPEDIN_OPTIONS);
         const mapView = await show3dMap(mapRef.current, mapData);
 
-        // Escuchar el evento de clic en el mapa 3D
+        // Escuchar clics sobre el mapa 3D
         mapView.on('click', (event) => {
+          console.log('Evento click detectado:', event);
+
+          // Verificar si el evento hizo contacto con polígonos
           if (event.polygons && event.polygons.length > 0) {
             const polygon = event.polygons[0];
-            const spaceName = polygon.hasLocations && polygon.locations.length > 0
-              ? polygon.locations[0].name
-              : polygon.id;
             
-            setSelectedSpace(spaceName);
+            // Extraer el nombre desde las ubicaciones asociadas o usar el ID del polígono
+            const name = polygon.locations && polygon.locations.length > 0
+              ? polygon.locations[0].name
+              : `Espacio ID: ${polygon.id}`;
+
+            setSelectedSpace(name);
           } else {
             setSelectedSpace(null);
           }
@@ -43,21 +48,28 @@ export default function App() {
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Card flotante de informacion */}
+      {/* Tarjeta flotante visible al seleccionar un espacio */}
       {selectedSpace && (
         <div style={{
           position: 'absolute',
-          bottom: '20px',
-          left: '20px',
+          bottom: '24px',
+          left: '24px',
           backgroundColor: '#ffffff',
-          padding: '16px 24px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          fontFamily: 'sans-serif',
-          zIndex: 1000
+          color: '#111827',
+          padding: '16px 20px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          zIndex: 9999,
+          minWidth: '220px',
+          border: '1px solid #e5e7eb'
         }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#111827' }}>Espacio Seleccionado</h3>
-          <p style={{ margin: 0, color: '#4b5563', fontWeight: 'bold' }}>{selectedSpace}</p>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', tracking: '0.05em' }}>
+            Ubicación Seleccionada
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 700, marginTop: '4px', color: '#1f2937' }}>
+            {selectedSpace}
+          </div>
         </div>
       )}
     </div>

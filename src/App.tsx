@@ -9,7 +9,7 @@ const MAPPEDIN_OPTIONS = {
 
 export default function App() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [selectedSpace, setSelectedSpace] = useState<string | null>(null);
+  const [selectedSpaceInfo, setSelectedSpaceInfo] = useState<{ name: string; id: string } | null>(null);
 
   useEffect(() => {
     let mapViewInstance: any = null;
@@ -19,28 +19,37 @@ export default function App() {
       try {
         const mapData = await getMapData(MAPPEDIN_OPTIONS);
         
-        // Destruir mapa previo en caso de re-render de React
-        if (mapViewInstance) {
-          mapViewInstance.destroy();
-        }
-
+        // Cargar el mapa
         mapViewInstance = await show3dMap(mapRef.current, mapData);
 
-        // Escuchar clics e inspeccionar todas las colecciones posibles del evento
-        mapViewInstance.on('click', (e: any) => {
-          console.log('Objeto completo de evento clic:', e);
+        // Habilitar selección al hacer clic sobre cualquier coordenada del mapa
+        mapViewInstance.on('click', (event: any) => {
+          console.log('Evento de clic:', event);
 
-          const space = e.spaces?.[0];
-          const polygon = e.polygons?.[0];
+          // Buscar en espacios o lugares
+          const clickedSpace = event.spaces?.[0];
+          
+          if (clickedSpace) {
+            // Obtener el nombre desde las ubicaciones asociadas al espacio
+            const locationName = clickedSpace.locations?.[0]?.name || clickedSpace.name || `Espacio ${clickedSpace.id}`;
+            
+            setSelectedSpaceInfo({
+              name: locationName,
+              id: clickedSpace.id
+            });
 
-          if (space) {
-            const name = space.name || (space.locations && space.locations[0]?.name) || `Espacio: ${space.id}`;
-            setSelectedSpace(name);
-          } else if (polygon) {
-            const name = polygon.name || (polygon.locations && polygon.locations[0]?.name) || `Polígono: ${polygon.id}`;
-            setSelectedSpace(name);
+            // Resaltar el espacio seleccionado en el mapa 3D (Mappedin v6 State API)
+            try {
+              mapViewInstance.setState(clickedSpace, {
+                color: '#38bdf8',
+                opacity: 0.8
+              });
+            } catch (err) {
+              console.log('No se pudo aplicar estilo al espacio:', err);
+            }
           } else {
-            setSelectedSpace(null);
+            // Si hace clic fuera de una tienda/espacio, limpiar seleccion
+            setSelectedSpaceInfo(null);
           }
         });
 
@@ -51,7 +60,6 @@ export default function App() {
 
     renderMap();
 
-    // Limpieza al desmontar el componente React
     return () => {
       if (mapViewInstance) {
         mapViewInstance.destroy();
@@ -63,26 +71,50 @@ export default function App() {
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
+      {/* Indicador de ayuda superior */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: 'rgba(15, 23, 42, 0.85)',
+        backdropFilter: 'blur(8px)',
+        color: '#f8fafc',
+        padding: '10px 20px',
+        borderRadius: '20px',
+        fontSize: '13px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        zIndex: 9999,
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        pointerEvents: 'none'
+      }}>
+        💡 HAZ CLIC SOBRE LOS LOCALES INTERIORES O MESAS PARA SELECCIONARLOS
+      </div>
+
       {/* Tarjeta flotante interactiva */}
-      {selectedSpace && (
+      {selectedSpaceInfo && (
         <div style={{
           position: 'absolute',
           bottom: '30px',
           left: '30px',
           backgroundColor: '#0f172a',
           color: '#ffffff',
-          padding: '16px 24px',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+          padding: '18px 24px',
+          borderRadius: '14px',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           zIndex: 9999,
-          border: '1px solid #1e293b'
+          border: '1px solid #1e293b',
+          minWidth: '240px'
         }}>
-          <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+          <div style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
             Ubicación Seleccionada
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px', color: '#38bdf8' }}>
-            {selectedSpace}
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px', color: '#f8fafc' }}>
+            {selectedSpaceInfo.name}
+          </div>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
+            ID: {selectedSpaceInfo.id}
           </div>
         </div>
       )}

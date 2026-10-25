@@ -18,17 +18,17 @@ export default function App() {
         const mapData = await getMapData(MAPPEDIN_OPTIONS);
         const mapView = await show3dMap(mapRef.current, mapData);
 
-        // En Mappedin v6, mapView.on('click') recibe un objeto con la propiedad 'polygons'
+        // Escuchar clics sobre el mapa 3D usando la propiedad 'spaces' de Mappedin v6
         mapView.on('click', (e: any) => {
-          console.log('Objeto de evento al hacer clic:', e);
+          console.log('Espacios detectados al hacer clic:', e.spaces);
 
-          const clickedPolygon = e?.polygons?.[0];
-
-          if (clickedPolygon) {
-            // Intentar obtener el nombre del espacio o su id
-            const name = clickedPolygon.name || 
-                         (clickedPolygon.locations && clickedPolygon.locations[0]?.name) || 
-                         `Espacio ID: ${clickedPolygon.id}`;
+          if (e.spaces && e.spaces.length > 0) {
+            const space = e.spaces[0];
+            
+            // Extraer el nombre del espacio o su id
+            const name = space.name || 
+                         (space.locations && space.locations[0]?.name) || 
+                         `Espacio ID: ${space.id}`;
 
             setSelectedSpace(name);
           } else {
@@ -54,14 +54,14 @@ export default function App() {
           position: 'absolute',
           bottom: '30px',
           left: '30px',
-          backgroundColor: '#1e293b',
+          backgroundColor: '#0f172a',
           color: '#ffffff',
           padding: '16px 24px',
           borderRadius: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          fontFamily: 'sans-serif',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
           zIndex: 9999,
-          border: '1px solid #334155'
+          border: '1px solid #1e293b'
         }}>
           <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
             Ubicación Seleccionada

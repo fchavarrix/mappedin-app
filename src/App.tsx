@@ -12,24 +12,32 @@ export default function App() {
   const [selectedSpace, setSelectedSpace] = useState<string | null>(null);
 
   useEffect(() => {
+    let mapViewInstance: any = null;
+
     async function renderMap() {
       if (!mapRef.current) return;
       try {
         const mapData = await getMapData(MAPPEDIN_OPTIONS);
-        const mapView = await show3dMap(mapRef.current, mapData);
+        
+        // Destruir mapa previo en caso de re-render de React
+        if (mapViewInstance) {
+          mapViewInstance.destroy();
+        }
 
-        // Escuchar clics sobre el mapa 3D usando la propiedad 'spaces' de Mappedin v6
-        mapView.on('click', (e: any) => {
-          console.log('Espacios detectados al hacer clic:', e.spaces);
+        mapViewInstance = await show3dMap(mapRef.current, mapData);
 
-          if (e.spaces && e.spaces.length > 0) {
-            const space = e.spaces[0];
-            
-            // Extraer el nombre del espacio o su id
-            const name = space.name || 
-                         (space.locations && space.locations[0]?.name) || 
-                         `Espacio ID: ${space.id}`;
+        // Escuchar clics e inspeccionar todas las colecciones posibles del evento
+        mapViewInstance.on('click', (e: any) => {
+          console.log('Objeto completo de evento clic:', e);
 
+          const space = e.spaces?.[0];
+          const polygon = e.polygons?.[0];
+
+          if (space) {
+            const name = space.name || (space.locations && space.locations[0]?.name) || `Espacio: ${space.id}`;
+            setSelectedSpace(name);
+          } else if (polygon) {
+            const name = polygon.name || (polygon.locations && polygon.locations[0]?.name) || `Polígono: ${polygon.id}`;
             setSelectedSpace(name);
           } else {
             setSelectedSpace(null);
@@ -42,6 +50,13 @@ export default function App() {
     }
 
     renderMap();
+
+    // Limpieza al desmontar el componente React
+    return () => {
+      if (mapViewInstance) {
+        mapViewInstance.destroy();
+      }
+    };
   }, []);
 
   return (

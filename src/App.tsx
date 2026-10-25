@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { getMapData, show3dMap } from '@mappedin/mappedin-js';
-import '@mappedin/mappedin-js/lib/mappedin-js.css';
 
 const MAPPEDIN_OPTIONS = {
   key: 'mik_yeBk0Vf0nNJtpesfu560e07e5',

@@ -18,24 +18,24 @@ export default function App() {
         const mapData = await getMapData(MAPPEDIN_OPTIONS);
         const mapView = await show3dMap(mapRef.current, mapData);
 
-        // Escuchar clics sobre el mapa 3D
-        mapView.on('click', (event) => {
-          console.log('Evento click detectado:', event);
+        // En Mappedin v6, mapView.on('click') recibe un objeto con la propiedad 'polygons'
+        mapView.on('click', (e: any) => {
+          console.log('Objeto de evento al hacer clic:', e);
 
-          // Verificar si el evento hizo contacto con polígonos
-          if (event.polygons && event.polygons.length > 0) {
-            const polygon = event.polygons[0];
-            
-            // Extraer el nombre desde las ubicaciones asociadas o usar el ID del polígono
-            const name = polygon.locations && polygon.locations.length > 0
-              ? polygon.locations[0].name
-              : `Espacio ID: ${polygon.id}`;
+          const clickedPolygon = e?.polygons?.[0];
+
+          if (clickedPolygon) {
+            // Intentar obtener el nombre del espacio o su id
+            const name = clickedPolygon.name || 
+                         (clickedPolygon.locations && clickedPolygon.locations[0]?.name) || 
+                         `Espacio ID: ${clickedPolygon.id}`;
 
             setSelectedSpace(name);
           } else {
             setSelectedSpace(null);
           }
         });
+
       } catch (error) {
         console.error('Error al cargar el mapa de Mappedin:', error);
       }
@@ -48,26 +48,25 @@ export default function App() {
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Tarjeta flotante visible al seleccionar un espacio */}
+      {/* Tarjeta flotante interactiva */}
       {selectedSpace && (
         <div style={{
           position: 'absolute',
-          bottom: '24px',
-          left: '24px',
-          backgroundColor: '#ffffff',
-          color: '#111827',
-          padding: '16px 20px',
+          bottom: '30px',
+          left: '30px',
+          backgroundColor: '#1e293b',
+          color: '#ffffff',
+          padding: '16px 24px',
           borderRadius: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+          fontFamily: 'sans-serif',
           zIndex: 9999,
-          minWidth: '220px',
-          border: '1px solid #e5e7eb'
+          border: '1px solid #334155'
         }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', tracking: '0.05em' }}>
+          <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
             Ubicación Seleccionada
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 700, marginTop: '4px', color: '#1f2937' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px', color: '#38bdf8' }}>
             {selectedSpace}
           </div>
         </div>
